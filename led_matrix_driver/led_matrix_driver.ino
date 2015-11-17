@@ -1,9 +1,22 @@
+//SERIAL COMMUNICATION VARIABLES/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+int ir_sensors=2; //how many ir sensors are you using?
+
+signed int threshold[]={125,125};
+const int readPin[]={A0, A1}; 
+unsigned int sensVal[ir_sensors];
+boolean passed[ir_sensors];
+boolean previousPassed[ir_sensors];
+unsigned long int calSensVal[ir_sensors];
+int count[ir_sensors];
+int incomingByte;
+
+
+//LED MATRIX VARIABLES///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 int dataIn = 12;
 int load = 10;
 int clock = 11;
- 
 int maxInUse = 2;    //change this variable to set how many MAX7219's you'll use
- 
 int e = 0;           // just a variable
  
 // define max7219 registers
@@ -21,7 +34,10 @@ byte max7219_reg_intensity   = 0x0a;
 byte max7219_reg_scanLimit   = 0x0b;
 byte max7219_reg_shutdown    = 0x0c;
 byte max7219_reg_displayTest = 0x0f;
+
+//LED MATRIX FUNCTIONS///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
  
+
 void putByte(byte data) {
   byte i = 8;
   byte mask;
@@ -104,16 +120,16 @@ void hor_stripes(int matrix){
   maxOne(matrix,6,195);         
   maxOne(matrix,7,195);       
   maxOne(matrix,8,195);       
-
+  
 }
 
+//MAIN CODE//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void setup () {
- 
+  Serial.begin(9600); 
   pinMode(dataIn, OUTPUT);
   pinMode(clock,  OUTPUT);
   pinMode(load,   OUTPUT);
- 
   digitalWrite(13, HIGH);  
  
 //initiation of the max 7219
@@ -129,10 +145,50 @@ void setup () {
 }  
  
 void loop () {
-  hor_stripes(1);
-  vert_stripes(2);
+  if (Serial.available()>0){
+  incomingByte=Serial.read();
+  }
+
+  if (incomingByte==1){    
+   int i=0;
+   for (i=0;i<2;i++){
+     if (calSensVal[i] = NULL || calSensVal[i] > analogRead(readPin[i])){
+       calSensVal[i]=analogRead(readPin[i]);};}
+
+     String calib_concat="\nSensor 0: " + String(calSensVal[0]) +
+			 "\nSensor 1: " + String(calSensVal[1]) +
+			 
+     Serial.println(calib_concat);
+     incomingByte=false;
+ }
+  if (incomingByte==2){
+     int i=0;
+     for (i=0;i<6;i= i+1){
+       sensVal[i]=analogRead(readPin[i]);    
+	 if (sensVal[i] >= calSensVal[i]*threshold[i]/100 && previousPassed[i]==false){
+	     previousPassed[i]=true;
+	     Serial.print(i);   
+	     delay(2);
+	 }
+	 if (abs(sensVal[i]-calSensVal[i]) <3){
+	   previousPassed[i]=false;
+	 }     
+     }
+
+ }
+  if (incomingByte==3){
+    hor_stripes(1);
+    vert_stripes(2);
+
+  }
+
+  if (incomingByte==4){
+    hor_stripes(2);
+    vert_stripes(1);
+  }
+  
 
  
   delay(2000);
- 
+  incomingByte=0;
 }
