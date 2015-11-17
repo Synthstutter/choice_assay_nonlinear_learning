@@ -1,51 +1,7 @@
-/* code for max 7219 from maxim,
-reduced and optimised for using more than one 7219 in a row,
-______________________________________
- 
- Code History:
- --------------
- 
-The original code was written for the Wiring board by:
- * Nicholas Zambetti and Dave Mellis /Interaction Design Institute Ivrea /Dec 2004
- * http://www.potemkin.org/uploads/Wiring/MAX7219.txt
- 
-First modification by:
- * Marcus Hannerstig/  K3, malmö högskola /2006
- * http://www.xlab.se | http://arduino.berlios.de
- 
-This version is by:
- * tomek ness /FH-Potsdam / Feb 2007
- * http://design.fh-potsdam.de/
- 
- * @acknowledgements: eric f.
- 
------------------------------------
- 
-General notes:
- 
--if you are only using one max7219, then use the function maxSingle to control
- the little guy ---maxSingle(register (1-8), collum (0-255))
- 
--if you are using more than one max7219, and they all should work the same,
-then use the function maxAll ---maxAll(register (1-8), collum (0-255))
- 
--if you are using more than one max7219 and just want to change something
-at one little guy, then use the function maxOne
----maxOne(Max you want to control (1== the first one), register (1-8),
-column (0-255))
- 
-During initiation, be sure to send every part to every max7219 and then
-upload it.
-For example, if you have five max7219's, you have to send the scanLimit 5 times
-before you load it-- otherwise not every max7219 will get the data. the
-function maxInUse keeps track of this, just tell it how many max7219 you are
-using.
-*/
- 
 int dataIn = 12;
 int load = 10;
 int clock = 11;
-
+ 
 int maxInUse = 2;    //change this variable to set how many MAX7219's you'll use
  
 int e = 0;           // just a variable
@@ -127,27 +83,30 @@ void maxOne(byte maxNr, byte reg, byte col) {
   digitalWrite(load,HIGH);
 }
  
-void set_horizontal_stripes(int which_matrix) {
-  maxOne(which_matrix,1,195);                       //  + - - - - - - -
-  maxOne(which_matrix,2,195);                       //  - + - - - - - -
-  maxOne(which_matrix,3,195);                       //  - - + - - - - -
-  maxOne(which_matrix,4,195);                       //  - - - + - - - -
-  maxOne(which_matrix,5,195);                      //  - - - - + - - -
-  maxOne(which_matrix,6,195);                      //  - - - - - + - -
-  maxOne(which_matrix,7,195);                      //  - - - - - - + -
-  maxOne(which_matrix,8,195);                     //  - - - - - - - +
+void vert_stripes(int matrix){
+  maxOne(matrix,1,255);                    
+  maxOne(matrix,2,255);                    
+  maxOne(matrix,3,0);                      
+  maxOne(matrix,4,0);                      
+  maxOne(matrix,5,0);                      
+  maxOne(matrix,6,0);                      
+  maxOne(matrix,7,255);                    
+  maxOne(matrix,8,255);                    
+
 }
 
-void set_vertical_stripes(int which_matrix) {
-  maxOne(which_matrix,1,255);                       //  + - - - - - - -
-  maxOne(which_matrix,2,255);                       //  - + - - - - - -
-  maxOne(which_matrix,3,0);                       //  - - + - - - - -
-  maxOne(which_matrix,4,0);                       //  - - - + - - - -
-  maxOne(which_matrix,5,0);                      //  - - - - + - - -
-  maxOne(which_matrix,6,0);                      //  - - - - - + - -
-  maxOne(which_matrix,7,255);                      //  - - - - - - + -
-  maxOne(which_matrix,8,255);                     //  - - - - - - - +
+void hor_stripes(int matrix){
+  maxOne(matrix,1,195);       
+  maxOne(matrix,2,195);       
+  maxOne(matrix,3,195);         
+  maxOne(matrix,4,195);         
+  maxOne(matrix,5,195);         
+  maxOne(matrix,6,195);         
+  maxOne(matrix,7,195);       
+  maxOne(matrix,8,195);       
+
 }
+
 
 void setup () {
  
@@ -170,10 +129,10 @@ void setup () {
 }  
  
 void loop () {
+  hor_stripes(1);
+  vert_stripes(2);
 
-    
-  set_horizontal_stripes(1);
-  set_vertical_stripes(2);
+ 
   delay(2000);
  
 }

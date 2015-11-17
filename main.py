@@ -47,10 +47,10 @@ def main():
     arduino.write("2")      # start recording
     while running:
         print current_time()
-        if not os.path.exists("bee_boxes_data/"):
-            os.makedirs("bee_boxes_data/")
+        if not os.path.exists("choice_assay_data/"):
+            os.makedirs("choice_assay_data/")
             fileTimeName1=(t.strftime('%Y_%m_%d.txt'))
-            filename1= "bee_boxes_data/" + fileTimeName1
+            filename1= "choice_assay_data/" + fileTimeName1
             print "\n..................recording..................."
         
             count=[0,0,0,0,0,0]
