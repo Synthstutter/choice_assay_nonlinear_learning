@@ -10,7 +10,11 @@ import serial
 import datetime 
 import time as t
 import os
+import random
+import threading
 
+
+    
 class Arduino():
     def __init__(self):
         self.sensorCalibrated=False
@@ -31,52 +35,60 @@ class Arduino():
         self.ser.write(value)
         t.sleep(.5)   
        
-    def read(self):
-        return self.ser.read(self.ser.inWaiting())
+    def readline(self):
+        return self.ser.readline()
 
+class matrix_thread(threading.Thread):
+    def run(self):
+        global matrix_pattern
+        global arduino
+        patterns=["3","4","5","6"]
+        matrix_pattern=random.choice(patterns)
+        arduino.write(matrix_pattern)
+        print "matrix pattern: " + matrix_pattern + "\r"
+        t.sleep(90)
+        matrix_pattern="7"
+        arduino.write(matrix_pattern)
+        print "matrix off\r"
+        t.sleep(30)
 
 def current_time():
     return t.strftime("Time: %H:%M:%S")
 
 
 def main():
-    arduino = Arduino()
     running = True
 
-    arduino.write("1")      # calibrate the arduinos
+    arduino.write("1")      # calibrate the arduino
     arduino.write("2")      # start recording
+    print "\n..................running..................."
+    print current_time()
+    matrix_thread().start()
     while running:
-        print current_time()
         if not os.path.exists("choice_assay_data/"):
             os.makedirs("choice_assay_data/")
-            fileTimeName1=(t.strftime('%Y_%m_%d.txt'))
-            filename1= "choice_assay_data/" + fileTimeName1
-            print "\n..................recording..................."
-        
-            count=[0,0,0,0,0,0]
-            while task==2:
-                f=open(filename1,"a")
-                if arduino.ser.inWaiting()>0:
-                    item=arduino.read()
-                    if item != " " or item != "":
 
-                        try:
-                            count[int(item)] += 1
-                            f.write("sensor ")
-                            f.write(str(item))
-                            f.write("\tdate_time: ")
-                            f.write(str(t.localtime()))
-                            f.write("\tcount:")
-                            f.write(str(count[int(item)]))
-                            f.write("\n")
-                            print str(item) + "\tCount: "+ str(count[int(item)]) + "\t"+  t.strftime("%H:%M:%S  %m/%d")  
-                        except:
-                            pass
+        fileTimeName1=(t.strftime('%Y_%m_%d.txt'))
+        filename1= "choice_assay_data/" + fileTimeName1
+        count=[0,0]
+        f=open(filename1,"a")
 
-        if task==2 and arduino.sensorCalibrated==False:
-            task==False;
-            print "You need to calibrate the sensor first!"
-        
+        # if arduino.ser.inWaiting()>0:
+        #     item=arduino.readline()
+        #     try:
+        #         count[int(item)] += 1
+        #         f.write("sensor ")
+        #         f.write(str(item))
+        #         f.write("\tdate_time: ")
+        #         f.write(str(t.localtime()))
+        #         f.write("\tcount:")
+        #         f.write(str(count[int(item)]))
+        #         f.write("\n")
+        #         print str(item) + "\tCount: "+ str(count[int(item)]) + "\t"+  t.strftime("%H:%M:%S  %m/%d")  
+        #     except:
+        #         pass
 
+arduino=Arduino()
+matrix_pattern = False
 main()
 

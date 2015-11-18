@@ -1,15 +1,24 @@
 //SERIAL COMMUNICATION VARIABLES/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+int incomingByte;
+int which_matrix;
+
+//IR SENSOR VARIABLES/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 int ir_sensors=2; //how many ir sensors are you using?
 
 signed int threshold[]={125,125};
 const int readPin[]={A0, A1}; 
-unsigned int sensVal[ir_sensors];
-boolean passed[ir_sensors];
-boolean previousPassed[ir_sensors];
-unsigned long int calSensVal[ir_sensors];
-int count[ir_sensors];
-int incomingByte;
+unsigned int sensVal[2];
+boolean passed[2];
+boolean previousPassed[2];
+unsigned long int calSensVal[2];
+int count[2];
+
+//SERVO CONTROL//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+int servo_pin = 3;
+
 
 
 //LED MATRIX VARIABLES///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -123,6 +132,18 @@ void hor_stripes(int matrix){
   
 }
 
+void off_stripes(int matrix){
+  maxOne(matrix,1,0);       
+  maxOne(matrix,2,0);       
+  maxOne(matrix,3,0);         
+  maxOne(matrix,4,0);         
+  maxOne(matrix,5,0);         
+  maxOne(matrix,6,0);         
+  maxOne(matrix,7,0);       
+  maxOne(matrix,8,0);       
+  
+}
+
 //MAIN CODE//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void setup () {
@@ -131,7 +152,8 @@ void setup () {
   pinMode(clock,  OUTPUT);
   pinMode(load,   OUTPUT);
   digitalWrite(13, HIGH);  
- 
+  pinMode(servo_pin, OUTPUT);
+  
 //initiation of the max 7219
   maxAll(max7219_reg_scanLimit, 0x07);      
   maxAll(max7219_reg_decodeMode, 0x00);  // using an led matrix (not digits)
@@ -146,14 +168,15 @@ void setup () {
  
 void loop () {
   if (Serial.available()>0){
-  incomingByte=Serial.read();
+	  incomingByte=Serial.read();
   }
-
+  // Calibrate sensor//
   if (incomingByte==1){    
    int i=0;
    for (i=0;i<2;i++){
      if (calSensVal[i] = NULL || calSensVal[i] > analogRead(readPin[i])){
-       calSensVal[i]=analogRead(readPin[i]);};}
+	     calSensVal[i]=analogRead(readPin[i]);}
+   }
 
      String calib_concat="\nSensor 0: " + String(calSensVal[0]) +
 			 "\nSensor 1: " + String(calSensVal[1]) +
@@ -161,34 +184,56 @@ void loop () {
      Serial.println(calib_concat);
      incomingByte=false;
  }
-  if (incomingByte==2){
-     int i=0;
-     for (i=0;i<6;i= i+1){
-       sensVal[i]=analogRead(readPin[i]);    
-	 if (sensVal[i] >= calSensVal[i]*threshold[i]/100 && previousPassed[i]==false){
-	     previousPassed[i]=true;
-	     Serial.print(i);   
-	     delay(2);
-	 }
-	 if (abs(sensVal[i]-calSensVal[i]) <3){
-	   previousPassed[i]=false;
-	 }     
-     }
+  // Run sensors//
+  while (incomingByte==2){
+    if (Serial.available()>0){
+	    which_matrix=Serial.read();
+    }
+
+    if (which_matrix==3){
+	    hor_stripes(1);
+	    vert_stripes(2);
+	    which_matrix= 0;
+
+    }
+    if (which_matrix==4){
+	    hor_stripes(2);
+	    vert_stripes(1);
+	    which_matrix= 0;
+    }
+    if (which_matrix==5){
+	    hor_stripes(1);
+	    vert_stripes(1);
+	    which_matrix= 0;
+
+    }
+    if (which_matrix==6){
+	    hor_stripes(1);
+	    vert_stripes(1);
+	    which_matrix= 0;
+
+    }
+    if (which_matrix==7){
+	    off_stripes(1);
+	    off_stripes(1);
+	    which_matrix= 0;
+    }
+    int i=0;
+    for (i=0;i<2;i= i+1){
+	    sensVal[i]=analogRead(readPin[i]);    
+	    if (sensVal[i] >= calSensVal[i]*threshold[i]/100 && previousPassed[i]==false){
+		    previousPassed[i]=true;
+		    Serial.print(i);   
+		    delay(2);
+	    }
+	    if (abs(sensVal[i]-calSensVal[i]) <3){
+		    previousPassed[i]=false;
+	    }     
+    }
 
  }
-  if (incomingByte==3){
-    hor_stripes(1);
-    vert_stripes(2);
-
-  }
-
-  if (incomingByte==4){
-    hor_stripes(2);
-    vert_stripes(1);
-  }
   
-
- 
   delay(2000);
   incomingByte=0;
 }
+
